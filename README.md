@@ -66,4 +66,4 @@ The probe currently accepts the Passenger Jobs 5.x integration line from 5.2.0 o
 
 ## License
 
-BDVM bridge code is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE). Passenger Jobs remains under its upstream MIT license.
+BDVM bridge code is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) and the applied copyright [NOTICE](NOTICE). Passenger Jobs remains under its upstream MIT license.
