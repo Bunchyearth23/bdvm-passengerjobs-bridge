@@ -5,9 +5,13 @@
     <Nullable>enable</Nullable>
     <AssemblyName>BDVM.PassengerJobsBridge</AssemblyName>
     <RootNamespace>BDVM.PassengerJobsBridge</RootNamespace>
+    <PassengerJobsApiPath Condition="'$(PassengerJobsApiPath)' == ''">$(MSBuildProjectDirectory)\..\..\..\dv-passengerjobs-upstream\PassengerJobs.API\bin\Release\netframework4.8\PassengerJobs.API.dll</PassengerJobsApiPath>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BDVM.Common\BDVM.Common.csproj" />
     <ProjectReference Include="..\BDVM.Passengers\BDVM.Passengers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="PassengerJobs.API" HintPath="$(PassengerJobsApiPath)" Private="false" />
   </ItemGroup>
 </Project>

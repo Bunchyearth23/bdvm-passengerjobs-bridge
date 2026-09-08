@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using PassengerJobs.API;
 
 namespace BDVM.PassengerJobsBridge;
 
@@ -28,7 +29,17 @@ public static class PassengerJobsBridgeProbe
         if (assembly == null)
             return Status(PassengerJobsBridgeState.Missing, modVersion, "passengerjobs-not-loaded");
 
-        return InspectSurface(modVersion, name => assembly.GetType(name, false) != null);
+        return InspectApi(modVersion, PassengerJobsApi.Current);
+    }
+
+    public static PassengerJobsBridgeStatus InspectApi(string? modVersion, IPassengerJobsApiV1? api)
+    {
+        if (!Version.TryParse(modVersion, out var version) || version < MinimumSupportedVersion || version >= MaximumExclusiveVersion)
+            return Status(PassengerJobsBridgeState.Incompatible, modVersion, "passengerjobs-version-unsupported");
+        if (api == null) return Status(PassengerJobsBridgeState.Incompatible, modVersion, "passengerjobs-api-missing");
+        if (!Version.TryParse(api.ApiVersion, out var apiVersion) || apiVersion.Major != 1)
+            return Status(PassengerJobsBridgeState.Incompatible, modVersion, "passengerjobs-api-version-unsupported");
+        return Status(PassengerJobsBridgeState.Available, modVersion, "passengerjobs-api-compatible");
     }
 
     public static PassengerJobsBridgeStatus InspectSurface(string? modVersion, Func<string, bool> hasType)
@@ -54,28 +65,29 @@ public static class PassengerJobsBridgeProbe
 
 public sealed class PassengerJobsRuntimeBridge
 {
-    private readonly Assembly? assembly;
-    private readonly MethodInfo? isPassengerJobType;
+    private readonly IPassengerJobsApiV1? api;
 
     public PassengerJobsRuntimeBridge(string? modVersion, Assembly? assembly)
     {
-        this.assembly = assembly;
+        api = PassengerJobsApi.Current;
         Status = PassengerJobsBridgeProbe.Inspect(modVersion, assembly);
-        isPassengerJobType = Status.IsAvailable
-            ? assembly!.GetType("PassengerJobs.Generation.PassJobType", false)?.GetMethod("IsPJType", BindingFlags.Public | BindingFlags.Static)
-            : null;
-        if (Status.IsAvailable && isPassengerJobType == null)
-            Status = new PassengerJobsBridgeStatus { State = PassengerJobsBridgeState.Incompatible, ModVersion = modVersion ?? "", Code = "passengerjobs-classifier-missing" };
     }
 
     public PassengerJobsBridgeStatus Status { get; private set; }
 
     public bool IsPassengerJob(object? job)
     {
-        if (!Status.IsAvailable || assembly == null || isPassengerJobType == null || job == null) return false;
+        if (!Status.IsAvailable || api == null || job == null) return false;
         var type = job.GetType();
-        var jobType = type.GetProperty("jobType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(job, null)
-            ?? type.GetField("jobType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(job);
-        return jobType != null && isPassengerJobType.Invoke(null, new[] { jobType }) is bool result && result;
+        var jobId = type.GetProperty("ID", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(job, null) as string
+            ?? type.GetField("ID", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(job) as string;
+        return !string.IsNullOrWhiteSpace(jobId) && api.TryGetJob(jobId!, out _);
+    }
+
+
+    public bool TryGetJob(string jobId, out PassengerJobSnapshot snapshot)
+    {
+        snapshot = new PassengerJobSnapshot();
+        return Status.IsAvailable && api != null && api.TryGetJob(jobId, out snapshot);
     }
 }

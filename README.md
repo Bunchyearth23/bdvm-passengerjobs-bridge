@@ -9,7 +9,7 @@
 | Module kind | Optional runtime bridge |
 | Target framework | .NET Framework 4.8 (`net48`) |
 | Required BDVM modules | `BDVM.Common`, `BDVM.Passengers` |
-| Direct runtime dependency | `PassengerJobs` 5.2.x or 5.3.x |
+| Direct runtime dependency | BDVM fork of `PassengerJobs` 5.2.x/5.3.x plus `PassengerJobs.API` 1.x |
 | Transitive runtime dependency | `DVLangHelper`, required by Passenger Jobs |
 | Standalone | No |
 
@@ -17,7 +17,7 @@
 
 ## Responsibilities
 
-- Detect whether Passenger Jobs is loaded and exposes the expected integration surface.
+- Detect whether Passenger Jobs is loaded and has registered the versioned `PassengerJobs.API` surface.
 - Accept Passenger Jobs versions from 5.2.0 inclusive to 6.0.0 exclusive.
 - Refuse missing, malformed or unsupported versions with an explicit status code.
 - Provide the boundary for observing Passenger Jobs identity, lifecycle and vanilla settlement.
@@ -26,7 +26,7 @@
 
 ## Current implementation
 
-`PassengerJobsBridgeProbe` validates the Unity Mod Manager version and the required runtime types without linking against or copying Passenger Jobs code. `PassengerJobsBridgeModule` declares the BDVM dependency graph. Concrete job-event observation remains a runtime adapter task and must stay fail-closed until its host/client behavior is validated.
+`PassengerJobsBridgeProbe` validates the Unity Mod Manager version and `PassengerJobs.API` major version. `PassengerJobsRuntimeBridge` resolves passenger identity through `IPassengerJobsApiV1` instead of reflecting over PassengerJobs implementation types. The API exposes lookup and lifecycle observations for available, taken, completed and abandoned jobs; runtime host/client settlement still remains fail-closed until validated.
 
 ## Boundaries
 
@@ -40,27 +40,28 @@ Place Common and Passengers beside this repository under `src/`, then run:
 dotnet build .\BDVM.PassengerJobsBridge.csproj -c Release
 ```
 
-Passenger Jobs is a runtime dependency and is therefore not needed to build the probe contract.
+Build `PassengerJobs.API.dll` from the BDVM integration fork first, or set the `PassengerJobsApiPath` MSBuild property to an equivalent API 1.x contract assembly.
 
 ## Testing and installation
 
 Unit validation covers missing, compatible and incompatible runtime surfaces. This module is not an independent Unity Mod Manager mod. Install it only through a compatible BDVM composition together with Passenger Jobs and its required DVLangHelper dependency.
 
-The installed development baseline used for the dependency audit was Passenger Jobs 5.3.0. Runtime host/client completion, cancellation, reload and payout reconciliation remain required before declaring the adapter production-ready.
+The installed development baseline used for the dependency audit was Passenger Jobs 5.3.0. The fork build is staged but not installed automatically. Runtime host/client completion, cancellation, reload and payout reconciliation remain required before declaring the adapter production-ready.
 
 ## Upstream and provenance
 
 - Original repository: [katycat5e/DVPassengerJobs](https://github.com/katycat5e/DVPassengerJobs).
+- BDVM integration fork: [Bunchyearth23/DVPassengerJobs](https://github.com/Bunchyearth23/DVPassengerJobs), branch `bdvm-integration`.
 - Recorded audit revision: `9bb668cbc2f3d270d282b2b3297667f01bec3e18`.
 - Author: Katy Fox / `Katycat`.
 - Upstream license: MIT.
-- Code copied into this repository: none.
+- Code copied into this repository: none; the bridge references only the separately built MIT-licensed API contract assembly.
 
-Passenger Jobs is not bundled. If upstream code is incorporated later, its copyright and MIT notice must be preserved.
+Passenger Jobs and `PassengerJobs.API.dll` are supplied by the separate fork package, not by this Apache-2.0 bridge. The fork preserves Katy Fox's copyright and MIT notice.
 
 ## Compatibility
 
-The probe currently accepts the Passenger Jobs 5.x integration line from 5.2.0 onward. Version acceptance alone is insufficient: required runtime types must also exist. Unknown major versions are refused until audited. The assembly version is not used because the distributed DLL reports `1.0.0.0`; the Unity Mod Manager manifest version is authoritative.
+The probe currently accepts the Passenger Jobs 5.x integration line from 5.2.0 onward and API major version 1. Version acceptance alone is insufficient: PassengerJobs must register the API implementation at load. Missing API registrations and unknown major versions are refused. The Unity Mod Manager manifest version remains authoritative for the mod version.
 
 ## License
 
