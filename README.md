@@ -18,6 +18,7 @@
 ## Responsibilities
 
 - Detect whether Passenger Jobs is loaded and has registered the versioned `PassengerJobs.API` surface.
+- Use API 1.1 to suspend automatic passenger-job generation when strict BDVM population control owns rolling-stock supply.
 - Accept Passenger Jobs versions from 5.2.0 inclusive to 6.0.0 exclusive.
 - Refuse missing, malformed or unsupported versions with an explicit status code.
 - Provide the boundary for observing Passenger Jobs identity, lifecycle and vanilla settlement.
@@ -26,7 +27,7 @@
 
 ## Current implementation
 
-`PassengerJobsBridgeProbe` validates the Unity Mod Manager version and `PassengerJobs.API` major version. `PassengerJobsRuntimeBridge` resolves passenger identity through `IPassengerJobsApiV1` instead of reflecting over PassengerJobs implementation types. The API exposes lookup and lifecycle observations for available, taken, completed and abandoned jobs; runtime host/client settlement still remains fail-closed until validated.
+`PassengerJobsBridgeProbe` validates the Unity Mod Manager version and `PassengerJobs.API` major version. `PassengerJobsRuntimeBridge` resolves passenger identity through `IPassengerJobsApiV1` instead of reflecting over PassengerJobs implementation types. `PassengerJobsGenerationControl` consumes the optional 1.1 control surface and fails closed when it is absent or non-authoritative. The API exposes lookup and lifecycle observations for available, taken, completed and abandoned jobs; runtime host/client settlement still remains fail-closed until validated.
 
 ## Boundaries
 
