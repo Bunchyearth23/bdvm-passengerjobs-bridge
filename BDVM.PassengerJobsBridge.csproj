@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>BDVM.PassengerJobsBridge</AssemblyName>
+    <RootNamespace>BDVM.PassengerJobsBridge</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BDVM.Common\BDVM.Common.csproj" />
+    <ProjectReference Include="..\BDVM.Passengers\BDVM.Passengers.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,1 @@
+{"id":"BDVM.PassengerJobsBridge","version":"1.0.0","kind":"bridge","optional":true,"standalone":false,"dependencies":["BDVM.Common","BDVM.Passengers"],"runtimeDependencies":["PassengerJobs"],"transitiveRuntimeDependencies":["DVLangHelper"]}
